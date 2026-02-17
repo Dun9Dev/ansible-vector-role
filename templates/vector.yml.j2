@@ -1,0 +1,19 @@
+api:
+  enabled: true
+  address: 0.0.0.0:8686
+
+sources:
+  dummy_source:
+    type: demo_logs
+    format: syslog
+    interval: 1.0
+    count: 100
+
+sinks:
+  stdout_sink:
+    type: console
+    inputs:
+      - dummy_source
+    target: stdout
+    encoding:
+      codec: json

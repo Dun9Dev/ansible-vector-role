@@ -1,0 +1,3 @@
+---
+vector_package: "vector-{{ vector_version }}-{{ vector_architecture }}-unknown-linux-gnu.tar.gz"
+vector_url: "https://packages.timber.io/vector/{{ vector_version }}/{{ vector_package }}"

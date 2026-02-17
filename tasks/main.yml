@@ -1,0 +1,77 @@
+---
+    - name: Create vector group
+      ansible.builtin.group:
+        name: vector
+        state: present
+        system: true
+
+    - name: Create vector user
+      ansible.builtin.user:
+        name: vector
+        group: vector
+        shell: /usr/sbin/nologin
+        system: true
+        create_home: false
+        home: "{{ vector_install_dir }}"
+        state: present
+
+    - name: Create directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: vector
+        group: vector
+        mode: '0755'
+      loop:
+        - "{{ vector_install_dir }}"
+        - "{{ vector_config_dir }}"
+        - "/var/log/vector"
+
+    - name: Download Vector
+      ansible.builtin.get_url:
+        url: "{{ vector_url }}"
+        dest: "/tmp/{{ vector_package }}"
+        mode: '0644'
+
+    - name: Extract Vector
+      ansible.builtin.unarchive:
+        src: "/tmp/{{ vector_package }}"
+        dest: "/tmp/"
+        remote_src: true
+        mode: '0755'
+
+    - name: Install Vector binaries
+      ansible.builtin.copy:
+        src: "/tmp/vector-{{ vector_architecture }}-unknown-linux-gnu/bin/vector"
+        dest: "/usr/local/bin/vector"
+        remote_src: true
+        owner: vector
+        group: vector
+        mode: '0755'
+
+    - name: Deploy Vector config
+      ansible.builtin.template:
+        src: templates/vector.yml.j2
+        dest: "{{ vector_config_dir }}/vector.yml"
+        owner: vector
+        group: vector
+        mode: '0644'
+
+    - name: Check if Vector is running
+      ansible.builtin.shell: pgrep -f vector
+      register: vector_running
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Stop Vector if running
+      ansible.builtin.shell: pkill -f vector
+      when: vector_running.rc == 0
+      changed_when: true
+
+    - name: Start Vector
+      ansible.builtin.shell: |
+        nohup /usr/local/bin/vector --config {{ vector_config_dir }}/vector.yml > /var/log/vector/vector.log 2>&1 &
+      args:
+        executable: /bin/bash
+      changed_when: true
