@@ -1,38 +1,100 @@
-Role Name
-=========
+# Ansible role: Vector
 
-A brief description of the role goes here.
+Роль для установки и настройки [Vector](https://vector.dev/) - инструмента для сбора и обработки логов.
 
-Requirements
-------------
+## Требования
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Ansible 2.14 или выше
+- Поддерживаемые ОС:
+  - Ubuntu 22.04
+  - Ubuntu 24.04
+  - Oracle Linux 8
 
-Role Variables
---------------
+## Переменные
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+| Переменная | Значение по умолчанию | Описание |
+|------------|----------------------|----------|
+| `vector_version` | `0.34.1` | Версия Vector для установки |
+| `vector_config_dir` | `/etc/vector` | Директория для конфигурации |
+| `skip_vector_stop` | `false` | Пропустить остановку Vector (для тестов) |
 
-Dependencies
-------------
+## Зависимости
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+Нет зависимостей от других ролей.
 
-Example Playbook
-----------------
+## Пример playbook
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```yaml
+- hosts: all
+  roles:
+    - role: ansible-vector-role
+      vector_version: "0.34.1"
+```
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+## Тестирование
 
-License
--------
+### Настройка окружения
 
-BSD
+```bash
+# Установка зависимостей
+pip install -r requirements.txt
 
-Author Information
-------------------
+# Установка коллекций (если проблемы с Galaxy)
+ansible-galaxy collection install git+https://github.com/containers/ansible-podman-collections.git
+ansible-galaxy collection install git+https://github.com/ansible-collections/ansible.posix.git
+```
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+### Запуск тестов molecule
+
+```bash
+# Тестирование с драйвером podman
+molecule test -s podman
+
+# Тестирование с драйвером docker (совместимость)
+molecule test -s compatibility
+```
+
+### Запуск тестов tox
+
+```bash
+# Установка tox
+pip install tox
+
+# Запуск всех тестов
+tox
+```
+
+## Сценарии тестирования
+
+- **default** - базовый сценарий с драйвером docker
+- **podman** - облегчённый сценарий с драйвером podman
+- **compatibility** - сценарий для тестирования на разных ОС
+
+## Решённые проблемы
+
+| Проблема | Решение |
+|----------|---------|
+| Отсутствие curl в контейнере | Добавлена установка curl в prepare.yml |
+| Ошибка "Stop Vector if running" | Добавлена переменная `skip_vector_stop` |
+| Проблемы с доступом к Galaxy | Установка коллекций из GitHub |
+| Отсутствие драйвера podman | Установлен `molecule-plugins[podman]` |
+
+## Версионирование
+
+- **v0.1.0** - базовая установка Vector
+- **v0.2.0** - добавлены тесты molecule и tox
+
+## Лицензия
+
+MIT
+
+## Автор
+
+Shestovskikh Daniil
+
+
+
+
+
+
+P.S. Скриншоты с успешным выполнением команд [тут](https://github.com/Dun9Dev/ansible-vector-role/tree/feature/molecule/playbook/image)
