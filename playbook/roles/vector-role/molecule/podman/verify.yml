@@ -1,0 +1,34 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check if vector binary exists
+      stat:
+        path: /usr/local/bin/vector
+      register: vector_binary
+
+    - name: Fail if vector binary not found
+      fail:
+        msg: "Vector binary not found at /usr/local/bin/vector"
+      when: not vector_binary.stat.exists
+
+    - name: Check if vector config exists
+      stat:
+        path: /etc/vector/vector.yml
+      register: vector_config
+
+    - name: Warn if config missing
+      debug:
+        msg: "Vector config not found at /etc/vector/vector.yml"
+      when: not vector_config.stat.exists
+
+    - name: Check if vector is running
+      command: pgrep -f vector
+      register: vector_process
+      changed_when: false
+      failed_when: false
+
+    - name: Display status
+      debug:
+        msg: "Vector is {{ 'running with PID ' + vector_process.stdout if vector_process.rc == 0 else 'not running (this is OK)' }}"

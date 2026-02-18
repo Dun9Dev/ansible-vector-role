@@ -1,0 +1,14 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Install Python and curl
+      raw: |
+        apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y python3 curl
+      changed_when: false
+      args:
+        executable: /bin/bash
+    - name: Gather facts
+      setup:

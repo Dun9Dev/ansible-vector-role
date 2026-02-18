@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    skip_vector_stop: true
+  tasks:
+    - name: Include vector-role
+      ansible.builtin.include_role:
+        name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
